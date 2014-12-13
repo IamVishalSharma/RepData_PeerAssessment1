@@ -16,13 +16,35 @@ The date column is converted to Date type.
 The data is examined by using summary and str methods on it.
 
 
-```{r, echo=TRUE}
+
+```r
 library(ggplot2) # we shall use ggplot2 for plotting figures
 tbl <- read.csv('activity.csv', header=T, colClasses=c("numeric", "character", "numeric"))
     tbl$interval <- factor(tbl$interval)
     tbl$date <- as.Date(tbl$date, format="%Y-%m-%d")
 summary(tbl)
+```
+
+```
+##      steps             date               interval    
+##  Min.   :  0.00   Min.   :2012-10-01   0      :   61  
+##  1st Qu.:  0.00   1st Qu.:2012-10-16   5      :   61  
+##  Median :  0.00   Median :2012-10-31   10     :   61  
+##  Mean   : 37.38   Mean   :2012-10-31   15     :   61  
+##  3rd Qu.: 12.00   3rd Qu.:2012-11-15   20     :   61  
+##  Max.   :806.00   Max.   :2012-11-30   25     :   61  
+##  NA's   :2304                          (Other):17202
+```
+
+```r
 str(tbl)
+```
+
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : Date, format: "2012-10-01" "2012-10-01" ...
+##  $ interval: Factor w/ 288 levels "0","5","10","15",..: 1 2 3 4 5 6 7 8 9 10 ...
 ```
 
 What is mean total number of steps taken per day?
@@ -30,7 +52,8 @@ What is mean total number of steps taken per day?
 
 Below is a histogram of the daily total number of steps taken, plotted with a bin interval of 1500 steps. Also marked on the plot are the mean and median of the daily total steps.
 
-```{r mean_Median_TotalNum_Steps_PerDay, echo=TRUE}
+
+```r
 calc_steps_per_day <- function(tbl) {
     steps_per_day <- aggregate(steps ~ date, tbl, sum,na.action = na.omit)
     colnames(steps_per_day) <- c("date", "steps")
@@ -56,20 +79,33 @@ median_steps = round(median(steps_per_day$steps), 2)
 plot_steps_per_day(steps_per_day, mean_steps, median_steps)
 ```
 
+![plot of chunk mean_Median_TotalNum_Steps_PerDay](figure/mean_Median_TotalNum_Steps_PerDay-1.png) 
+
 
 The mean number of steps taken across all the days is:
-```{r, echo=TRUE}
+
+```r
 mean(steps_per_day$steps)
 ```
+
+```
+## [1] 10766.19
+```
 The median total number of steps taken across all the days is:
-```{r, echo=TRUE}
+
+```r
 median(steps_per_day$steps)
+```
+
+```
+## [1] 10765
 ```
 
 What is the average daily activity pattern?
 -------------------------------------------------
 To get the average daily activity pattern, we first calculate the average number of steps taken for each time interval, by averaging across all days.
-```{r, echo=TRUE}
+
+```r
 calc_steps_per_interval <- function(tbl) {
     steps_pi <- aggregate(tbl$steps, by=list(interval=tbl$interval),
                           FUN=mean, na.rm=T)
@@ -80,7 +116,8 @@ calc_steps_per_interval <- function(tbl) {
 }
 ```
 Below is a plot of the average daily pattern of the number of steps plotted against the interval number. The interval that clocks the maximum number of steps on the average is also marked.
-```{r avg_daily_activity_pattern, echo=TRUE}
+
+```r
 plot_activity_pattern <- function(steps_per_interval, max_step_interval) {
     col_labels=c(paste("Interval with Maximum Activity: ", max_step_interval))
     cols = c("red")
@@ -99,16 +136,24 @@ Index_With_Max_Steps <- with(steps_per_interval, which.max(steps_per_interval$st
 plot_activity_pattern(steps_per_interval, max_step_interval)
 ```
 
+![plot of chunk avg_daily_activity_pattern](figure/avg_daily_activity_pattern-1.png) 
+
 
 Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
-```{r, echo=TRUE}
+
+```r
 max_step_interval
+```
+
+```
+## [1] 835
 ```
 
 Imputing missing values
 --------------------------
 To populate missing values, we choose to replace them with the mean value at the same interval across days. The choice is based on the assumption that activities usually follow a daily pattern
-```{r, echo=TRUE}
+
+```r
 impute_means <- function(tbl, defaults) {
     na_indices <- which(is.na(tbl$steps))
     defaults <- steps_per_interval
@@ -127,37 +172,72 @@ complete_tbl <- data.frame(
 ```
 
 Summarizing the new dataset with imputed values:
-```{r, echo=TRUE}
+
+```r
 summary(complete_tbl)
 ```
 
+```
+##      steps             date               interval    
+##  Min.   :  0.00   Min.   :2012-10-01   0      :   61  
+##  1st Qu.:  0.00   1st Qu.:2012-10-16   5      :   61  
+##  Median :  0.00   Median :2012-10-31   10     :   61  
+##  Mean   : 37.38   Mean   :2012-10-31   15     :   61  
+##  3rd Qu.: 27.00   3rd Qu.:2012-11-15   20     :   61  
+##  Max.   :806.00   Max.   :2012-11-30   25     :   61  
+##                                        (Other):17202
+```
+
 The total number of missing values in the dataset
-```{r, echo=TRUE}
+
+```r
 na_Count_Org <- sum(is.na(tbl$steps))
 na_Count_Org
 ```
 
+```
+## [1] 2304
+```
+
 The total number of missing values in the Modified dataset
-```{r , echo=TRUE}
+
+```r
 na_Count_Mdfy <- sum(is.na(complete_tbl$steps))
 na_Count_Mdfy
 ```
 
+```
+## [1] 0
+```
+
 With the imputed dataset, below is a histogram of the daily total number of steps taken, plotted with a bin interval of 1500 steps. Also marked on the plot are the mean and median of the daily total steps.
-```{r witout_NA_TotalNum_Steps_PerDay, echo=TRUE}
+
+```r
 complete_steps_per_day <- calc_steps_per_day(complete_tbl)
 complete_mean_steps = round(mean(complete_steps_per_day$steps), 2)
 complete_median_steps = round(median(complete_steps_per_day$steps), 2)
 plot_steps_per_day(complete_steps_per_day, complete_mean_steps, complete_median_steps)
 ```
 
+![plot of chunk witout_NA_TotalNum_Steps_PerDay](figure/witout_NA_TotalNum_Steps_PerDay-1.png) 
+
 The mean number of steps taken across all the days is:
-```{r, echo=TRUE}
+
+```r
 mean(complete_steps_per_day$steps)
 ```
+
+```
+## [1] 10766.19
+```
 The median total number of steps taken across all the days is:
-```{r, echo=TRUE}
+
+```r
 median(complete_steps_per_day$steps)
+```
+
+```
+## [1] 10766.19
 ```
 
 Comparing with the calculations done in the first section of this document, we observe that while the mean value remains unchanghed, the median value has shifted closer to the mean.Therefore, the impact of imputing missing data on the estimates of the total daily number of steps is small.
@@ -171,7 +251,8 @@ We do this comparison with the table with filled-in missing values.
 3- Tabulate the average steps per interval for each dataset.
 4- Plot the two datasets side by side for comparison.
 
-```{r weekday_WeenEnd_Act_Comp, echo=TRUE}
+
+```r
 calc_day_of_week_data <- function(tbl) {
     tbl$weekday <- as.factor(weekdays(tbl$date))
     weekend_data <- subset(tbl, weekday %in% c("Saturday","Sunday"))
@@ -198,6 +279,8 @@ plot_day_of_week_comparison <- function(dow_data) {
 day_of_week_data <- calc_day_of_week_data(complete_tbl)
 plot_day_of_week_comparison(day_of_week_data)
 ```
+
+![plot of chunk weekday_WeenEnd_Act_Comp](figure/weekday_WeenEnd_Act_Comp-1.png) 
 
 
 We observe that activity on the weekends tends to be more spread out over the day compared to the weekdays. This could be due to the fact that activities on weekdays mostly follow a work related routine, whereas weekends tend to be more adhoc.
